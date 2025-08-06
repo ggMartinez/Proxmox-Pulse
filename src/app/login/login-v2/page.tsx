@@ -3,9 +3,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Cpu } from 'lucide-react';
@@ -38,29 +38,19 @@ export default function LoginPageV2() {
   };
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="hidden bg-muted lg:block">
-        <Image
-          data-ai-hint="server room"
-          src="https://placehold.co/1920x1080.png"
-          alt="Image"
-          width="1920"
-          height="1080"
-          className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-        />
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+       <div className="mb-8 flex items-center justify-center gap-2 text-3xl font-bold">
+        <Cpu className="h-10 w-10 text-primary" />
+        <span>Proxmox Pulse</span>
       </div>
-      <div className="flex items-center justify-center py-12">
-        <div className="mx-auto grid w-[350px] gap-6">
-           <div className="mb-4 flex items-center justify-center gap-2 text-3xl font-bold">
-            <Cpu className="h-10 w-10 text-primary" />
-            <span>Proxmox Pulse</span>
-          </div>
-          <div className="grid gap-2 text-center">
-            <h1 className="text-3xl font-bold">Login</h1>
-            <p className="text-balance text-muted-foreground">
-              Enter your Proxmox server credentials to continue
-            </p>
-          </div>
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardDescription>
+            Enter your Proxmox server credentials to continue.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <form onSubmit={handleLogin}>
             <div className="grid gap-4">
               <div className="grid gap-2">
@@ -76,9 +66,7 @@ export default function LoginPageV2() {
                 />
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input 
                   id="password" 
                   type="password" 
@@ -94,8 +82,8 @@ export default function LoginPageV2() {
               </Button>
             </div>
           </form>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
