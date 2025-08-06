@@ -1,6 +1,8 @@
 'use server';
 
 import { z } from 'zod';
+import fetch from 'node-fetch';
+
 
 const loginSchema = z.object({
   // serverUrl is now handled by an environment variable
@@ -31,12 +33,6 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
   }
 
   try {
-    //
-    // IMPORTANT: This is where you would make the actual API call to your Proxmox server.
-    // The following code is a simulation.
-    //
-    // Example using fetch:
-    /*
     const response = await fetch(`${serverUrl}/api2/json/access/ticket`, {
       method: 'POST',
       headers: {
@@ -50,26 +46,20 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      // @ts-ignore
       return { success: false, error: `Authentication failed: ${response.statusText} ${errorData.message || ''}`.trim() };
     }
 
     const data = await response.json();
+    // @ts-ignore
     const token = data.data.ticket;
+    // @ts-ignore
     const csrfToken = data.data.CSRFPreventionToken;
     
     // You would typically store the ticket and CSRF token in a secure HttpOnly cookie
     // or another secure server-side session mechanism.
     
-    return { success: true, data: { username, token, csrfToken } };
-    */
-    
-    // Simulating a successful API call for demonstration purposes
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    if (username && password) {
-        return { success: true, data: { username: fullUsername, token: 'fake-proxmox-ticket', csrfToken: 'fake-csrf-token' } };
-    } else {
-        return { success: false, error: 'Invalid credentials provided.' };
-    }
+    return { success: true, data: { username: fullUsername, token, csrfToken } };
 
   } catch (error) {
     console.error('Proxmox API request failed:', error);
@@ -77,6 +67,9 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
         // Network errors or other exceptions
         if (error.message.includes('ECONNREFUSED')) {
             return { success: false, error: 'Connection refused. Check the server URL and ensure the Proxmox API is accessible.' };
+        }
+        if (error.message.includes('invalid json response body')) {
+             return { success: false, error: 'Invalid response from server. Check the server URL.' };
         }
         return { success: false, error: `An unexpected network error occurred: ${error.message}` };
     }
