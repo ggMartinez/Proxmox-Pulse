@@ -45,7 +45,7 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
     const node = data.data.clustername;
 
     if (!ticket || !csrfToken || !node) {
-        return { success: false, error: 'Invalid response from Proxmox API. Missing token or CSRF token.' };
+        return { success: false, error: 'Invalid response from Proxmox API. Missing token, CSRF token, or node name.' };
     }
 
     // Set cookies for session management
