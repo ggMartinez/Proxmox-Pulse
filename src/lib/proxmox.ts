@@ -31,16 +31,17 @@ async function getApiClient() {
 }
 
 export async function getVms(): Promise<ApiResult<VM[]>> {
-  const client = await getApiClient();
-  if (!client.success) {
-    return client;
+  const clientResult = await getApiClient();
+  if (!clientResult.success) {
+    return clientResult;
   }
+  const { serverUrl, node, headers } = clientResult;
 
   try {
-    const url = `${client.serverUrl}/api2/json/nodes/${client.node}/qemu`;
+    const url = `${serverUrl}/api2/json/nodes/${node}/qemu`;
     const response = await fetch(url, {
       method: 'GET',
-      headers: client.headers,
+      headers: headers,
     });
 
     if (!response.ok) {
@@ -68,16 +69,17 @@ export async function getVms(): Promise<ApiResult<VM[]>> {
 }
 
 export async function getContainers(): Promise<ApiResult<Container[]>> {
-    const client = await getApiClient();
-    if (!client.success) {
-        return client;
+    const clientResult = await getApiClient();
+    if (!clientResult.success) {
+        return clientResult;
     }
+    const { serverUrl, node, headers } = clientResult;
 
     try {
-        const url = `${client.serverUrl}/api2/json/nodes/${client.node}/lxc`;
+        const url = `${serverUrl}/api2/json/nodes/${node}/lxc`;
         const response = await fetch(url, {
             method: 'GET',
-            headers: client.headers,
+            headers: headers,
         });
 
         if (!response.ok) {

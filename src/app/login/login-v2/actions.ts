@@ -16,6 +16,7 @@ type LoginResult =
   | { success: false; error: string };
 
 export async function loginAction(credentials: unknown): Promise<LoginResult> {
+  const cookieStore = cookies();
   const parsed = loginSchema.safeParse(credentials);
 
   if (!parsed.success) {
@@ -49,7 +50,6 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
     }
 
     // Set cookies for session management
-    const cookieStore = cookies();
     cookieStore.set('PVEAuthCookie', ticket, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -101,7 +101,8 @@ export async function logoutAction() {
 }
 
 export async function checkAuthStatus() {
-    const userCookie = cookies().get('PVEUser');
+    const cookieStore = cookies();
+    const userCookie = cookieStore.get('PVEUser');
     const isAuthenticated = !!userCookie;
     const user = isAuthenticated ? { username: userCookie.value } : null;
     return { isAuthenticated, user };
