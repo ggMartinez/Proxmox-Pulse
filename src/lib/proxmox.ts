@@ -1,22 +1,31 @@
 'use server';
-import { cookies } from 'next/headers';
+import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 import fetch from 'node-fetch';
 import type { VM, Container } from './mock-data';
 
 type ApiResult<T> = { success: true; data: T } | { success: false; error: string };
 
-async function getApiClient() {
-  const cookieStore = cookies();
-  const ticket = cookieStore.get('PVEAuthCookie')?.value;
-  const csrfToken = cookieStore.get('CSRFPreventionToken')?.value;
+type ApiClient = {
+  serverUrl: string;
+  node: string;
+  headers: {
+    Cookie: string;
+    CSRFPreventionToken: string;
+    'Content-Type': string;
+  };
+}
+
+function getApiClient(cookies: ReadonlyRequestCookies): ApiResult<ApiClient> {
+  const ticket = cookies.get('PVEAuthCookie')?.value;
+  const csrfToken = cookies.get('CSRFPreventionToken')?.value;
   const serverUrl = 'https://proxmox.ggmartinez.cloudns.pro';
-  const node = cookieStore.get('PVENode')?.value;
+  const node = cookies.get('PVENode')?.value;
 
   if (!ticket || !csrfToken || !serverUrl || !node) {
-    console.error('getApiClient: Missing auth data in cookies.', { 
-        hasTicket: !!ticket, 
+    console.error('getApiClient: Missing auth data in cookies.', {
+        hasTicket: !!ticket,
         hasCsrf: !!csrfToken,
-        hasNode: !!node 
+        hasNode: !!node
     });
     return { success: false, error: 'Not authenticated or server not configured.' };
   }
@@ -27,15 +36,15 @@ async function getApiClient() {
     'Content-Type': 'application/json',
   };
 
-  return { success: true, serverUrl, node, headers };
+  return { success: true, data: { serverUrl, node, headers } };
 }
 
-export async function getVms(): Promise<ApiResult<VM[]>> {
-  const clientResult = await getApiClient();
+export async function getVms(cookies: ReadonlyRequestCookies): Promise<ApiResult<VM[]>> {
+  const clientResult = getApiClient(cookies);
   if (!clientResult.success) {
     return clientResult;
   }
-  const { serverUrl, node, headers } = clientResult;
+  const { serverUrl, node, headers } = clientResult.data;
 
   try {
     const url = `${serverUrl}/api2/json/nodes/${node}/qemu`;
@@ -68,12 +77,12 @@ export async function getVms(): Promise<ApiResult<VM[]>> {
   }
 }
 
-export async function getContainers(): Promise<ApiResult<Container[]>> {
-    const clientResult = await getApiClient();
+export async function getContainers(cookies: ReadonlyRequestCookies): Promise<ApiResult<Container[]>> {
+    const clientResult = getApiClient(cookies);
     if (!clientResult.success) {
         return clientResult;
     }
-    const { serverUrl, node, headers } = clientResult;
+    const { serverUrl, node, headers } = clientResult.data;
 
     try {
         const url = `${serverUrl}/api2/json/nodes/${node}/lxc`;

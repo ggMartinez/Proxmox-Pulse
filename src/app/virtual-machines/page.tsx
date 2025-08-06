@@ -1,8 +1,10 @@
 import { VmList } from '@/components/app/vm-list';
 import { getVms } from '@/lib/proxmox';
+import { cookies } from 'next/headers';
 
 export default async function VirtualMachinesPage() {
-  const vms = await getVms();
+  const cookieStore = cookies();
+  const vms = await getVms(cookieStore);
   
   if (!vms.success) {
     return (

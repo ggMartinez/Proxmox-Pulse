@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Terminal, View } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getContainers } from '@/lib/proxmox';
+import { cookies } from 'next/headers';
 
 export default async function ContainersPage() {
-  const containersResult = await getContainers();
+  const cookieStore = cookies();
+  const containersResult = await getContainers(cookieStore);
 
   if (!containersResult.success) {
     return (
