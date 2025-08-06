@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Play, Square, RotateCw, Activity } from 'lucide-react';
+import { Play, Square, RotateCw, Activity, Terminal, View } from 'lucide-react';
 import type { VM } from '@/lib/mock-data';
 import { OptimizationModal } from './optimization-modal';
 import { useToast } from '@/hooks/use-toast';
@@ -86,9 +86,7 @@ export function VmList({ initialVms }: VMListProps) {
             <TableRow>
               <TableHead className="w-[100px]">Status</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead className="hidden md:table-cell">VM ID</TableHead>
-              <TableHead className="hidden sm:table-cell">CPU</TableHead>
-              <TableHead className="hidden sm:table-cell">Memory</TableHead>
+              <TableHead className="hidden md:table-cell">Resources</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -102,11 +100,19 @@ export function VmList({ initialVms }: VMListProps) {
                   </Badge>
                 </TableCell>
                 <TableCell className="font-medium">{vm.name}</TableCell>
-                <TableCell className="hidden md:table-cell text-muted-foreground">{vm.id}</TableCell>
-                <TableCell className="hidden sm:table-cell text-muted-foreground">{vm.cpuUsage}%</TableCell>
-                <TableCell className="hidden sm:table-cell text-muted-foreground">{vm.memoryUsage}%</TableCell>
+                <TableCell className="hidden md:table-cell text-muted-foreground">
+                  CPU: {vm.cpuUsage}% &bull; Mem: {vm.memoryUsage}%
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1 sm:gap-2">
+                     <Button variant="ghost" size="icon">
+                      <View className="h-4 w-4" />
+                      <span className="sr-only">Details</span>
+                    </Button>
+                    <Button variant="ghost" size="icon">
+                      <Terminal className="h-4 w-4" />
+                      <span className="sr-only">Terminal</span>
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleAction(vm.id, 'start')} disabled={vm.status === 'running'}>
                       <Play className="h-4 w-4" />
                       <span className="sr-only">Start</span>

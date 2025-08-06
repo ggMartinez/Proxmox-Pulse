@@ -17,6 +17,34 @@ export const vms: VM[] = [
   { id: '105', name: 'plex-media-server', status: 'stopped', cpuUsage: 0, memoryUsage: 0, maxCpu: 4, maxMemory: 8 },
 ];
 
+export type Container = {
+    id: string;
+    name: string;
+    status: 'running' | 'stopped';
+    cpuUsage: number;
+    memoryUsage: number;
+    diskUsage: number;
+}
+
+export const containers: Container[] = [
+    { id: '201', name: 'nginx-proxy', status: 'running', cpuUsage: 5, memoryUsage: 10, diskUsage: 30 },
+    { id: '202', name: 'pi-hole', status: 'running', cpuUsage: 2, memoryUsage: 15, diskUsage: 25 },
+    { id: '203', name: 'unifi-controller', status: 'stopped', cpuUsage: 0, memoryUsage: 0, diskUsage: 50 },
+];
+
+export type Storage = {
+    id: string;
+    name: string;
+    type: 'LVM-Thin' | 'Directory' | 'ZFS';
+    usage: number;
+}
+
+export const storages: Storage[] = [
+    { id: 'local-lvm', name: 'local-lvm', type: 'LVM-Thin', usage: 75 },
+    { id: 'local-zfs', name: 'local-zfs', type: 'ZFS', usage: 45 },
+    { id: 'backups', name: 'backups', type: 'Directory', usage: 90 },
+]
+
 export type NodeStats = {
   cpu: number;
   memory: number;
