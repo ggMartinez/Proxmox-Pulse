@@ -57,7 +57,7 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
         sameSite: 'lax',
     });
     cookieStore.set('CSRFPreventionToken', csrfToken, {
-        httpOnly: true,
+        httpOnly: false, // Must be readable by client-side JS for API calls
         secure: process.env.NODE_ENV === 'production',
         path: '/',
         sameSite: 'lax',

@@ -13,6 +13,11 @@ async function getApiClient() {
   const node = cookieStore.get('PVENode')?.value;
 
   if (!ticket || !csrfToken || !serverUrl || !node) {
+    console.error('getApiClient: Missing auth data in cookies.', { 
+        hasTicket: !!ticket, 
+        hasCsrf: !!csrfToken,
+        hasNode: !!node 
+    });
     return { success: false, error: 'Not authenticated or server not configured.' };
   }
 
@@ -32,15 +37,16 @@ export async function getVms(): Promise<ApiResult<VM[]>> {
   }
 
   try {
-    const response = await fetch(`${client.serverUrl}/api2/json/nodes/${client.node}/qemu`, {
+    const url = `${client.serverUrl}/api2/json/nodes/${client.node}/qemu`;
+    const response = await fetch(url, {
       method: 'GET',
       headers: client.headers,
     });
 
     if (!response.ok) {
-       const errorData = await response.json().catch(() => ({}));
-      // @ts-ignore
-      return { success: false, error: `API Error: ${response.statusText} (${response.status}). ${errorData.message || ''}`.trim() };
+       const errorText = await response.text();
+       console.error(`Failed to fetch VMs from ${url}. Status: ${response.status}. Body: ${errorText}`);
+       return { success: false, error: `API Error (${response.status}): ${response.statusText}. Check server logs for more details.` };
     }
 
     const result: any = await response.json();
@@ -57,7 +63,7 @@ export async function getVms(): Promise<ApiResult<VM[]>> {
     return { success: true, data: vms };
   } catch (error) {
     console.error('Failed to fetch VMs:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    return { success: false, error: error instanceof Error ? error.message : 'An unknown error occurred while fetching VMs.' };
   }
 }
 
@@ -68,15 +74,16 @@ export async function getContainers(): Promise<ApiResult<Container[]>> {
     }
 
     try {
-        const response = await fetch(`${client.serverUrl}/api2/json/nodes/${client.node}/lxc`, {
+        const url = `${client.serverUrl}/api2/json/nodes/${client.node}/lxc`;
+        const response = await fetch(url, {
             method: 'GET',
             headers: client.headers,
         });
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            // @ts-ignore
-            return { success: false, error: `API Error: ${response.statusText} (${response.status}). ${errorData.message || ''}`.trim() };
+            const errorText = await response.text();
+            console.error(`Failed to fetch Containers from ${url}. Status: ${response.status}. Body: ${errorText}`);
+            return { success: false, error: `API Error (${response.status}): ${response.statusText}. Check server logs for more details.` };
         }
 
         const result: any = await response.json();
@@ -93,6 +100,6 @@ export async function getContainers(): Promise<ApiResult<Container[]>> {
 
     } catch (error) {
         console.error('Failed to fetch Containers:', error);
-        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+        return { success: false, error: error instanceof Error ? error.message : 'An unknown error occurred while fetching containers.' };
     }
 }

@@ -20,6 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const verifyAuth = useCallback(async () => {
+    setIsLoading(true);
     try {
       const status = await checkAuthStatus();
       setIsAuthenticated(status.isAuthenticated);
@@ -38,20 +39,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [verifyAuth]);
 
   const login = (username: string) => {
-    // Auth is now handled by cookies, just need to update the state
-    const userData = { username };
-    setUser(userData);
-    setIsAuthenticated(true);
-    // Optionally re-verify with server
+    // When login is successful, we verify auth again to get the user from the cookie
     verifyAuth();
   };
 
   const logout = async () => {
     await logoutAction();
-    // Also clear client-side cookies if they exist, for good measure
-    Object.keys(Cookies.get()).forEach(cookieName => {
-        Cookies.remove(cookieName, { path: '/' });
-    });
     setUser(null);
     setIsAuthenticated(false);
   };
