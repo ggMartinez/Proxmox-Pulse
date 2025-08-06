@@ -73,6 +73,17 @@ export default function LoginPageV2() {
                     disabled={isLoading}
                   />
                 </div>
+                <div className="grid gap-2 text-left">
+                  <Label htmlFor="password">Password</Label>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    required 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
                  <div className="grid gap-2 text-left">
                     <Label htmlFor="realm">Realm</Label>
                     <Select value={realm} onValueChange={setRealm} disabled={isLoading}>
@@ -85,17 +96,6 @@ export default function LoginPageV2() {
                         </SelectContent>
                     </Select>
                  </div>
-                <div className="grid gap-2 text-left">
-                  <Label htmlFor="password">Password</Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    required 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Login
@@ -107,3 +107,4 @@ export default function LoginPageV2() {
       </div>
     </div>
   )
+}
