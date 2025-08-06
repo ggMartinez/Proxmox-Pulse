@@ -38,7 +38,9 @@ export async function getVms(): Promise<ApiResult<VM[]>> {
     });
 
     if (!response.ok) {
-      return { success: false, error: `API Error: ${response.statusText}` };
+       const errorData = await response.json().catch(() => ({}));
+      // @ts-ignore
+      return { success: false, error: `API Error: ${response.statusText} (${response.status}). ${errorData.message || ''}`.trim() };
     }
 
     const result: any = await response.json();
@@ -72,7 +74,9 @@ export async function getContainers(): Promise<ApiResult<Container[]>> {
         });
 
         if (!response.ok) {
-            return { success: false, error: `API Error: ${response.statusText}` };
+            const errorData = await response.json().catch(() => ({}));
+            // @ts-ignore
+            return { success: false, error: `API Error: ${response.statusText} (${response.status}). ${errorData.message || ''}`.trim() };
         }
 
         const result: any = await response.json();
