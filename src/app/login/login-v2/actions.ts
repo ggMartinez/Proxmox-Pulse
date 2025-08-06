@@ -24,11 +24,7 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
 
   const { username, password, realm } = parsed.data;
   const fullUsername = `${username}@${realm}`;
-  const serverUrl = process.env.PROXMOX_SERVER;
-
-  if (!serverUrl) {
-      return { success: false, error: 'PROXMOX_SERVER environment variable is not set.' };
-  }
+  const serverUrl = 'https://proxmox.ggmartinez.cloudns.pro';
 
   try {
     const response = await fetch(`${serverUrl}/api2/json/access/ticket`, {

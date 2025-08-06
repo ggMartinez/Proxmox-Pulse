@@ -9,7 +9,7 @@ async function getApiClient() {
   const cookieStore = cookies();
   const ticket = cookieStore.get('PVEAuthCookie')?.value;
   const csrfToken = cookieStore.get('CSRFPreventionToken')?.value;
-  const serverUrl = process.env.PROXMOX_SERVER;
+  const serverUrl = 'https://proxmox.ggmartinez.cloudns.pro';
   const node = cookieStore.get('PVENode')?.value;
 
   if (!ticket || !csrfToken || !serverUrl || !node) {
