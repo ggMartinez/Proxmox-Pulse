@@ -40,16 +40,17 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
       return { success: false, error: `Authentication failed: ${response.statusText} ${errorData.message || ''}`.trim() };
     }
 
-    const data: any = await response.json();
+    const responseData: any = await response.json();
+    const data = responseData.data;
     
-    if (!data.data || !data.data.ticket || !data.data.CSRFPreventionToken || !data.data.clustername) {
-        console.error('Invalid response from Proxmox API:', data);
+    if (!data || !data.ticket || !data.CSRFPreventionToken || !data.clustername) {
+        console.error('Invalid response from Proxmox API:', responseData);
         return { success: false, error: 'Invalid response from Proxmox API. Missing token, CSRF token, or node name.' };
     }
     
-    const ticket = data.data.ticket;
-    const csrfToken = data.data.CSRFPreventionToken;
-    const node = data.data.clustername;
+    const ticket = data.ticket;
+    const csrfToken = data.CSRFPreventionToken;
+    const node = data.clustername;
 
     const cookieStore = cookies();
     // Set cookies for session management
