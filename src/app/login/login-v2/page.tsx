@@ -10,29 +10,35 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Cpu } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { loginAction } from './actions';
 
 export default function LoginPageV2() {
   const router = useRouter();
   const { login } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [username, setUsername] = useState('');
+  const [serverUrl, setServerUrl] = useState('');
+  const [username, setUsername] = useState('root@pam');
   const [password, setPassword] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const result = await loginAction({ serverUrl, username, password });
 
-    // In a real app, you would validate credentials against a server.
-    if (username && password) {
-      login(username, 'fake-token');
-      toast({ title: 'Login Successful', description: 'Welcome back!' });
-      router.push('/virtual-machines');
-    } else {
-       toast({ title: 'Login Failed', description: 'Please enter a username and password.', variant: 'destructive' });
+      if (result.success) {
+        // In a real app, result.data would contain the auth token and user info
+        login(result.data.username, result.data.token);
+        toast({ title: 'Login Successful', description: 'Welcome back!' });
+        router.push('/virtual-machines');
+      } else {
+        toast({ title: 'Login Failed', description: result.error, variant: 'destructive' });
+        setIsLoading(false);
+      }
+    } catch (error) {
+       toast({ title: 'Login Error', description: 'An unexpected error occurred.', variant: 'destructive' });
        setIsLoading(false);
     }
   };
@@ -54,6 +60,18 @@ export default function LoginPageV2() {
           <CardContent>
             <form onSubmit={handleLogin}>
               <div className="grid gap-4">
+                <div className="grid gap-2 text-left">
+                  <Label htmlFor="server-url">Server URL</Label>
+                  <Input
+                    id="server-url"
+                    type="text"
+                    placeholder="https://your-proxmox-server:8006"
+                    required
+                    value={serverUrl}
+                    onChange={(e) => setServerUrl(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
                 <div className="grid gap-2 text-left">
                   <Label htmlFor="username">Username</Label>
                   <Input
