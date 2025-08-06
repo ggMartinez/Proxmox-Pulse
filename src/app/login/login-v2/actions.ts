@@ -101,7 +101,8 @@ export async function logoutAction() {
 }
 
 export async function checkAuthStatus() {
-    const cookieStore = cookies();
-    const user = cookieStore.get('PVEUser');
-    return { isAuthenticated: !!user, user: user ? { username: user.value } : null };
+    const userCookie = cookies().get('PVEUser');
+    const isAuthenticated = !!userCookie;
+    const user = isAuthenticated ? { username: userCookie.value } : null;
+    return { isAuthenticated, user };
 }
