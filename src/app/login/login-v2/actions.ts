@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -41,13 +42,16 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
     }
 
     const data: any = await response.json();
+    
+    if (!data.data || !data.data.ticket || !data.data.CSRFPreventionToken || !data.data.clustername) {
+        console.error('Invalid response from Proxmox API:', data);
+        return { success: false, error: 'Invalid response from Proxmox API. Missing token, CSRF token, or node name.' };
+    }
+    
     const ticket = data.data.ticket;
     const csrfToken = data.data.CSRFPreventionToken;
     const node = data.data.clustername;
 
-    if (!ticket || !csrfToken || !node) {
-        return { success: false, error: 'Invalid response from Proxmox API. Missing token, CSRF token, or node name.' };
-    }
 
     // Set cookies for session management
     cookieStore.set('PVEAuthCookie', ticket, {
