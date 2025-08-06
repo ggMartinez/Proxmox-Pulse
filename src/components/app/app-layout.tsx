@@ -10,10 +10,11 @@ import { AuthGuard } from './auth-guard';
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
+  // Do not render the main layout on the login page
   if (pathname === '/login') {
     return <>{children}</>;
   }
-
+  
   return (
     <AuthGuard>
       <SidebarProvider>
