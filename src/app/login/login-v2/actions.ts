@@ -1,12 +1,12 @@
-
 'use server';
 
 import { z } from 'zod';
 
 const loginSchema = z.object({
-  serverUrl: z.string().url({ message: 'Please enter a valid server URL.' }),
+  // serverUrl is now handled by an environment variable
   username: z.string().min(1, { message: 'Username is required.' }),
   password: z.string().min(1, { message: 'Password is required.' }),
+  realm: z.enum(['pam', 'pve']),
 });
 
 type LoginResult = 
@@ -20,7 +20,15 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
     return { success: false, error: parsed.error.errors.map(e => e.message).join(', ') };
   }
 
-  const { serverUrl, username, password } = parsed.data;
+  const { username, password, realm } = parsed.data;
+  const fullUsername = `${username}@${realm}`;
+
+  // Read server URL from environment variable
+  const serverUrl = process.env.PROXMOX_SERVER;
+
+  if (!serverUrl) {
+      return { success: false, error: 'PROXMOX_SERVER environment variable is not set.' };
+  }
 
   try {
     //
@@ -34,7 +42,7 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+      body: `username=${encodeURIComponent(fullUsername)}&password=${encodeURIComponent(password)}`,
       // In production, you might need to handle self-signed certificates.
       // For Node.js environments, this might involve using an agent with `rejectUnauthorized: false`.
       // This is not recommended for production use.
@@ -58,7 +66,7 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
     // Simulating a successful API call for demonstration purposes
     await new Promise(resolve => setTimeout(resolve, 1000));
     if (username && password) {
-        return { success: true, data: { username: username, token: 'fake-proxmox-ticket', csrfToken: 'fake-csrf-token' } };
+        return { success: true, data: { username: fullUsername, token: 'fake-proxmox-ticket', csrfToken: 'fake-csrf-token' } };
     } else {
         return { success: false, error: 'Invalid credentials provided.' };
     }

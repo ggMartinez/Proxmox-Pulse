@@ -11,22 +11,23 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Cpu } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { loginAction } from './actions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function LoginPageV2() {
   const router = useRouter();
   const { login } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [serverUrl, setServerUrl] = useState('');
-  const [username, setUsername] = useState('root@pam');
+  const [username, setUsername] = useState('root');
   const [password, setPassword] = useState('');
+  const [realm, setRealm] = useState('pam');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const result = await loginAction({ serverUrl, username, password });
+      const result = await loginAction({ username, password, realm });
 
       if (result.success) {
         // In a real app, result.data would contain the auth token and user info
@@ -60,30 +61,30 @@ export default function LoginPageV2() {
           <CardContent>
             <form onSubmit={handleLogin}>
               <div className="grid gap-4">
-                <div className="grid gap-2 text-left">
-                  <Label htmlFor="server-url">Server URL</Label>
-                  <Input
-                    id="server-url"
-                    type="text"
-                    placeholder="https://your-proxmox-server:8006"
-                    required
-                    value={serverUrl}
-                    onChange={(e) => setServerUrl(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="grid gap-2 text-left">
+                 <div className="grid gap-2 text-left">
                   <Label htmlFor="username">Username</Label>
                   <Input
                     id="username"
                     type="text"
-                    placeholder="root@pam"
+                    placeholder="root"
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     disabled={isLoading}
                   />
                 </div>
+                 <div className="grid gap-2 text-left">
+                    <Label htmlFor="realm">Realm</Label>
+                    <Select value={realm} onValueChange={setRealm} disabled={isLoading}>
+                        <SelectTrigger id="realm">
+                            <SelectValue placeholder="Select a realm" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="pam">Linux PAM</SelectItem>
+                            <SelectItem value="pve">Proxmox VE</SelectItem>
+                        </SelectContent>
+                    </Select>
+                 </div>
                 <div className="grid gap-2 text-left">
                   <Label htmlFor="password">Password</Label>
                   <Input 
@@ -106,4 +107,3 @@ export default function LoginPageV2() {
       </div>
     </div>
   )
-}
