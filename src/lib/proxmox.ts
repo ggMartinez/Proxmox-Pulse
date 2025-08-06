@@ -15,14 +15,11 @@ type ApiClient = {
   };
 }
 
-function getApiClient(cookies: ReadonlyRequestCookies): ApiResult<ApiClient> {
-  const ticket = cookies.get('PVEAuthCookie')?.value;
-  const csrfToken = cookies.get('CSRFPreventionToken')?.value;
+function getApiClient(ticket: string, csrfToken: string, node: string): ApiResult<ApiClient> {
   const serverUrl = 'https://proxmox.ggmartinez.cloudns.pro';
-  const node = cookies.get('PVENode')?.value;
 
   if (!ticket || !csrfToken || !serverUrl || !node) {
-    console.error('getApiClient: Missing auth data in cookies.', {
+    console.error('getApiClient: Missing auth data.', {
         hasTicket: !!ticket,
         hasCsrf: !!csrfToken,
         hasNode: !!node
@@ -40,11 +37,19 @@ function getApiClient(cookies: ReadonlyRequestCookies): ApiResult<ApiClient> {
 }
 
 export async function getVms(cookies: ReadonlyRequestCookies): Promise<ApiResult<VM[]>> {
-  const clientResult = getApiClient(cookies);
+  const ticket = cookies.get('PVEAuthCookie')?.value;
+  const csrfToken = cookies.get('CSRFPreventionToken')?.value;
+  const node = cookies.get('PVENode')?.value;
+  
+  if (!ticket || !csrfToken || !node) {
+    return { success: false, error: 'Missing authentication tokens.' };
+  }
+
+  const clientResult = getApiClient(ticket, csrfToken, node);
   if (!clientResult.success) {
     return clientResult;
   }
-  const { serverUrl, node, headers } = clientResult.data;
+  const { serverUrl, headers } = clientResult.data;
 
   try {
     const url = `${serverUrl}/api2/json/nodes/${node}/qemu`;
@@ -78,11 +83,19 @@ export async function getVms(cookies: ReadonlyRequestCookies): Promise<ApiResult
 }
 
 export async function getContainers(cookies: ReadonlyRequestCookies): Promise<ApiResult<Container[]>> {
-    const clientResult = getApiClient(cookies);
+    const ticket = cookies.get('PVEAuthCookie')?.value;
+    const csrfToken = cookies.get('CSRFPreventionToken')?.value;
+    const node = cookies.get('PVENode')?.value;
+
+    if (!ticket || !csrfToken || !node) {
+        return { success: false, error: 'Missing authentication tokens.' };
+    }
+    
+    const clientResult = getApiClient(ticket, csrfToken, node);
     if (!clientResult.success) {
         return clientResult;
     }
-    const { serverUrl, node, headers } = clientResult.data;
+    const { serverUrl, headers } = clientResult.data;
 
     try {
         const url = `${serverUrl}/api2/json/nodes/${node}/lxc`;
