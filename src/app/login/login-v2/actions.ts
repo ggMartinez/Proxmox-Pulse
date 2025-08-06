@@ -2,17 +2,17 @@
 
 import { z } from 'zod';
 import fetch from 'node-fetch';
+import { cookies } from 'next/headers';
 
 
 const loginSchema = z.object({
-  // serverUrl is now handled by an environment variable
   username: z.string().min(1, { message: 'Username is required.' }),
   password: z.string().min(1, { message: 'Password is required.' }),
   realm: z.enum(['pam', 'pve']),
 });
 
 type LoginResult = 
-  | { success: true; data: { username: string; token: string, csrfToken: string } }
+  | { success: true; data: { username: string } }
   | { success: false; error: string };
 
 export async function loginAction(credentials: unknown): Promise<LoginResult> {
@@ -24,8 +24,6 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
 
   const { username, password, realm } = parsed.data;
   const fullUsername = `${username}@${realm}`;
-
-  // Read server URL from environment variable
   const serverUrl = process.env.PROXMOX_SERVER;
 
   if (!serverUrl) {
@@ -35,13 +33,8 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
   try {
     const response = await fetch(`${serverUrl}/api2/json/access/ticket`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `username=${encodeURIComponent(fullUsername)}&password=${encodeURIComponent(password)}`,
-      // In production, you might need to handle self-signed certificates.
-      // For Node.js environments, this might involve using an agent with `rejectUnauthorized: false`.
-      // This is not recommended for production use.
     });
 
     if (!response.ok) {
@@ -50,21 +43,47 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
       return { success: false, error: `Authentication failed: ${response.statusText} ${errorData.message || ''}`.trim() };
     }
 
-    const data = await response.json();
-    // @ts-ignore
-    const token = data.data.ticket;
-    // @ts-ignore
+    const data: any = await response.json();
+    const ticket = data.data.ticket;
     const csrfToken = data.data.CSRFPreventionToken;
-    
-    // You would typically store the ticket and CSRF token in a secure HttpOnly cookie
-    // or another secure server-side session mechanism.
-    
-    return { success: true, data: { username: fullUsername, token, csrfToken } };
+    const node = data.data.clustername;
+
+    if (!ticket || !csrfToken || !node) {
+        return { success: false, error: 'Invalid response from Proxmox API. Missing token or CSRF token.' };
+    }
+
+    // Set cookies for session management
+    const cookieStore = cookies();
+    cookieStore.set('PVEAuthCookie', ticket, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        sameSite: 'lax',
+    });
+    cookieStore.set('CSRFPreventionToken', csrfToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        sameSite: 'lax',
+    });
+     cookieStore.set('PVEUser', fullUsername, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        sameSite: 'lax',
+    });
+    cookieStore.set('PVENode', node, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        sameSite: 'lax',
+    });
+
+    return { success: true, data: { username: fullUsername } };
 
   } catch (error) {
     console.error('Proxmox API request failed:', error);
     if (error instanceof Error) {
-        // Network errors or other exceptions
         if (error.message.includes('ECONNREFUSED')) {
             return { success: false, error: 'Connection refused. Check the server URL and ensure the Proxmox API is accessible.' };
         }
@@ -75,4 +94,18 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
     }
     return { success: false, error: 'An unknown error occurred during login.' };
   }
+}
+
+export async function logoutAction() {
+    const cookieStore = cookies();
+    cookieStore.delete('PVEAuthCookie');
+    cookieStore.delete('CSRFPreventionToken');
+    cookieStore.delete('PVEUser');
+    cookieStore.delete('PVENode');
+}
+
+export async function checkAuthStatus() {
+    const cookieStore = cookies();
+    const user = cookieStore.get('PVEUser');
+    return { isAuthenticated: !!user, user: user ? { username: user.value } : null };
 }

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -30,8 +29,7 @@ export default function LoginPageV2() {
       const result = await loginAction({ username, password, realm });
 
       if (result.success) {
-        // In a real app, result.data would contain the auth token and user info
-        login(result.data.username, result.data.token);
+        login(result.data.username);
         toast({ title: 'Login Successful', description: 'Welcome back!' });
         router.push('/virtual-machines');
       } else {

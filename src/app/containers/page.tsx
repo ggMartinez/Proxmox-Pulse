@@ -1,11 +1,26 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { containers } from '@/lib/mock-data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Terminal, View } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getContainers } from '@/lib/proxmox';
 
-export default function ContainersPage() {
+export default async function ContainersPage() {
+  const containersResult = await getContainers();
+
+  if (!containersResult.success) {
+    return (
+       <div>
+        <h1 className="text-3xl font-bold tracking-tight mb-6">Containers</h1>
+        <div className="p-4 rounded-md border border-destructive/50 bg-destructive/10 text-destructive">
+          <p>Failed to load Containers: {containersResult.error}</p>
+        </div>
+      </div>
+    )
+  }
+
+  const containers = containersResult.data;
+
   return (
     <div>
       <h1 className="text-3xl font-bold tracking-tight mb-6">Containers</h1>

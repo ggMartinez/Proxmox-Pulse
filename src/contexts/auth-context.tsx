@@ -1,12 +1,14 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { checkAuthStatus, logoutAction } from '@/app/login/login-v2/actions';
+import Cookies from 'js-cookie';
 
 type AuthContextType = {
   isAuthenticated: boolean;
   user: { username: string } | null;
   isLoading: boolean;
-  login: (username: string, token: string) => void;
+  login: (username: string) => void;
   logout: () => void;
 };
 
@@ -17,35 +19,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<{ username: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // In a real app, you'd verify the token with your backend
+  const verifyAuth = useCallback(async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      const storedUser = localStorage.getItem('user');
-      if (token && storedUser) {
-        setUser(JSON.parse(storedUser));
-        setIsAuthenticated(true);
-      }
+      const status = await checkAuthStatus();
+      setIsAuthenticated(status.isAuthenticated);
+      setUser(status.user);
     } catch (error) {
-        console.error("Failed to parse user from localStorage", error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
+      console.error("Failed to check auth status", error);
+      setIsAuthenticated(false);
+      setUser(null);
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   }, []);
 
-  const login = (username: string, token: string) => {
+  useEffect(() => {
+    verifyAuth();
+  }, [verifyAuth]);
+
+  const login = (username: string) => {
+    // Auth is now handled by cookies, just need to update the state
     const userData = { username };
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
     setIsAuthenticated(true);
+    // Optionally re-verify with server
+    verifyAuth();
   };
 
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+  const logout = async () => {
+    await logoutAction();
+    // Also clear client-side cookies if they exist, for good measure
+    Object.keys(Cookies.get()).forEach(cookieName => {
+        Cookies.remove(cookieName, { path: '/' });
+    });
     setUser(null);
     setIsAuthenticated(false);
   };
