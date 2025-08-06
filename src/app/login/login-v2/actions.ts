@@ -97,16 +97,14 @@ export async function loginAction(credentials: unknown): Promise<LoginResult> {
 }
 
 export async function logoutAction() {
-    const cookieStore = cookies();
-    cookieStore.delete('PVEAuthCookie');
-    cookieStore.delete('CSRFPreventionToken');
-    cookieStore.delete('PVEUser');
-    cookieStore.delete('PVENode');
+    cookies().delete('PVEAuthCookie');
+    cookies().delete('CSRFPreventionToken');
+    cookies().delete('PVEUser');
+    cookies().delete('PVENode');
 }
 
 export async function checkAuthStatus() {
-    const cookieStore = cookies();
-    const userCookie = cookieStore.get('PVEUser');
+    const userCookie = cookies().get('PVEUser');
     const isAuthenticated = !!userCookie;
     const user = isAuthenticated ? { username: userCookie.value } : null;
     return { isAuthenticated, user };
