@@ -11,7 +11,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // Do not render the main layout on the login page
-  if (pathname === '/login') {
+  if (pathname === '/login/login-v2') {
     return <>{children}</>;
   }
   
